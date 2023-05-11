@@ -1,5 +1,6 @@
 import os
 import json
+import pdb
 import time
 import numpy as np
 from collections import defaultdict
@@ -23,11 +24,11 @@ from r2r.env import R2RBatch, R2RBackBatch
 from r2r.parser import parse_args
 
 
+
 def build_dataset(args, rank=0, is_test=False):
     tok = get_tokenizer(args)
 
     feat_db = ImageFeaturesDB(args.img_ft_file, args.image_feat_size)
-
     if args.dataset == 'r2r_back':
         dataset_class = R2RBackBatch
     else:
@@ -242,8 +243,6 @@ def valid(args, train_env, val_envs, rank=-1):
 
     for env_name, env in val_envs.items():
         if os.path.exists(os.path.join(args.pred_dir, "submit_%s.json" % env_name)):
-            continue
-        if env_name != "val_unseen":
             continue
         agent.logs = defaultdict(list)
         agent.env = env

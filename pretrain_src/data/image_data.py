@@ -15,7 +15,7 @@ import torch
 
 from timm.data.transforms_factory import create_transform
 
-from .data import angle_feature, softmax, MultiStepNavData
+from .r2r_data import angle_feature, softmax, MultiStepNavData
 
 HEIGHT = 248
 WIDTH = 330
@@ -57,15 +57,17 @@ class MultiStepNavImageData(MultiStepNavData):
         )
         self.img_db_file = img_db_file
 
-        self.img_db_env = lmdb.open(
-            self.img_db_file,
-            map_size=int(1e12),
-            readonly=True,
-            create=False,
-            readahead=False,
-            max_readers=2000,
-        )
-        self.img_db_txn = self.img_db_env.begin()
+        # self.img_db_env = lmdb.open(
+        #     self.img_db_file,
+        #     map_size=int(1e12),
+        #     readonly=True,
+        #     create=False,
+        #     readahead=False,
+        #     max_readers=2000,
+        # )
+        # self.img_db_txn = self.img_db_env.begin()
+        if self.in_memory:
+            self._image_store = {}
 
         self.img_transform = create_transform(
             (3, 224, 224),
@@ -93,7 +95,8 @@ class MultiStepNavImageData(MultiStepNavData):
                 self.traj_step_refer.append((sel_idx, j_rand, t_rand))
 
     def __del__(self):
-        self.img_db_env.close()
+        pass
+        # self.img_db_env.close()
 
     def get_input(
         self,
@@ -148,7 +151,7 @@ class MultiStepNavImageData(MultiStepNavData):
             ob_nav_types = np.zeros((ob_len,), dtype=np.int64)
             ob_nav_types[-1] = 2  # 2 for [STOP]
             ob_nav_cands = self.scanvp_cands["%s_%s" % (scan, path[t_cur])]
-            ob_nav_viewindexes = np.array(list(ob_nav_cands.values()))
+            ob_nav_viewindexes = np.array([v[0] for v in ob_nav_cands.values()])
             ob_nav_types[ob_nav_viewindexes] = 1
 
             outs.update(
@@ -222,19 +225,35 @@ class MultiStepNavImageData(MultiStepNavData):
 
         return images, angle_feats, pano_images, pano_angle_feats
 
+    # def get_image(self, scan, viewpoint):
+    #     key = "%s_%s" % (scan, viewpoint)
+    #     buf = self.img_db_txn.get(key.encode("ascii"))
+    #
+    #     images = np.frombuffer(buf, dtype=np.uint8)
+    #     images = images.reshape(36, HEIGHT, WIDTH, 3)  # fixed image size
+    #
+    #     # (36, 3, IMGSIZE, IMGSIZE)
+    #     images = torch.stack(
+    #         [self.img_transform(Image.fromarray(image)) for image in images], 0
+    #     )
+    #
+    #     return images
+
     def get_image(self, scan, viewpoint):
-        key = "%s_%s" % (scan, viewpoint)
-        buf = self.img_db_txn.get(key.encode("ascii"))
+        path = os.path.join(self.img_db_file, scan, viewpoint)
+        images = []
+        for i in range(36):
+            image_path = os.path.join(path, str(i) + ".jpg")
 
-        images = np.frombuffer(buf, dtype=np.uint8)
-        images = images.reshape(36, HEIGHT, WIDTH, 3)  # fixed image size
-
-        # (36, 3, IMGSIZE, IMGSIZE)
+            im = Image.open(image_path)
+            img = np.array(im)
+            images.append(img)
+            im.close()
         images = torch.stack(
             [self.img_transform(Image.fromarray(image)) for image in images], 0
         )
-
         return images
+
 
     def get_image_feature(self, scan, viewpoint, pad_stop_token=False):
         # only need to get prob feature

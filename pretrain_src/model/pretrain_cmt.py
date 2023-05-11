@@ -1,3 +1,4 @@
+import pdb
 from collections import defaultdict
 
 import torch
@@ -145,7 +146,6 @@ class MultiStepNavCMTPreTraining(BertPreTrainedModel):
         txt_embeds, _, _ = self.bert(txt_ids, txt_masks, 
             hist_img_fts, hist_ang_fts, hist_pano_img_fts, hist_pano_ang_fts, hist_masks,
             None, None, None, None)
-
         # only compute masked tokens for better efficiency
         masked_output = self._compute_masked_hidden(txt_embeds, txt_labels != -1)
         prediction_scores = self.mlm_head(masked_output)
@@ -227,7 +227,6 @@ class MultiStepNavCMTPreTraining(BertPreTrainedModel):
         txt_embeds, hist_embeds, _ = self.bert(txt_ids, txt_masks, 
             hist_img_fts, hist_ang_fts, hist_pano_img_fts, hist_pano_ang_fts, hist_masks,
             None, None, None, None)
-
         # only compute masked regions for better efficient=cy
         hist_embeds = hist_embeds[:, 1:] # remove global embedding
         masked_output = self._compute_masked_hidden(hist_embeds, hist_mrc_masks)

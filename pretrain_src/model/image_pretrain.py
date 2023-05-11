@@ -8,7 +8,7 @@ from transformers import BertPreTrainedModel
 
 from .vilmodel import BertLayerNorm, BertOnlyMLMHead
 
-from .pretrain import (NextActionPrediction, NextActionRegression,
+from .pretrain_cmt import (NextActionPrediction, NextActionRegression,
                        SpatialRelRegression, RegionClassification,
                        ItmPrediction)
 

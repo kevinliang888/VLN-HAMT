@@ -5,7 +5,7 @@
     "hidden_act": "gelu",
     "hidden_dropout_prob": 0.1,
     "hidden_size": 768,
-    "image_feat_size": 768,
+    "image_feat_size": 512,
     "angle_feat_size": 4,
     "image_prob_size": 1000,
     "img_feature_type": "imagenet",

@@ -5,6 +5,7 @@ import h5py
 import networkx as nx
 import math
 import numpy as np
+import pdb
 
 class ImageFeaturesDB(object):
     def __init__(self, img_ft_file, image_feat_size):
@@ -134,6 +135,29 @@ def new_simulator(connectivity_dir, scan_data_dir=None):
     sim.setDiscretizedViewingAngles(True)
     sim.initialize()
 
+    return sim
+
+def build_simulator(connectivity_dir, scan_data_dir=None):
+    import MatterSim
+    
+    # Simulator image parameters
+    WIDTH = 640
+    HEIGHT = 480
+    VFOV = 60
+    
+    sim = MatterSim.Simulator()
+    sim.setNavGraphPath(connectivity_dir)
+    if scan_data_dir:
+        sim.setDatasetPath(scan_data_dir)
+    sim.setCameraResolution(WIDTH, HEIGHT)
+    sim.setCameraVFOV(math.radians(VFOV))
+    sim.setDiscretizedViewingAngles(True)
+    sim.setDepthEnabled(False)
+    sim.setPreloadingEnabled(False)
+    sim.setBatchSize(1)
+    sim.initialize()
+ 
+    
     return sim
 
 def get_point_angle_feature(sim, angle_feat_size, baseViewId=0, minus_elevation=False):

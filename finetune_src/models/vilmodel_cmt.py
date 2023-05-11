@@ -2,6 +2,7 @@ import json
 import logging
 import math
 import os
+import pdb
 import sys
 from io import open
 from typing import Callable, List, Tuple
@@ -529,7 +530,6 @@ class HistoryEmbeddings(nn.Module):
         self.img_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
         self.ang_linear = nn.Linear(config.angle_feat_size, config.hidden_size)
         self.ang_layer_norm = BertLayerNorm(config.hidden_size, eps=1e-12)
-        
         self.position_embeddings = nn.Embedding(config.max_action_steps, config.hidden_size)
         # special type embedding for history
         self.type_embedding = nn.Embedding(1, config.hidden_size)

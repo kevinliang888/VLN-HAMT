@@ -1,13 +1,12 @@
-''' Batched Room-to-Room navigation environment '''
-
-import json
 import os
 import numpy as np
 import math
 import random
 import networkx as nx
 from collections import defaultdict
-
+import sys
+import pdb
+sys.path.append('/n/fs/kl-project/Matterport3DSimulator/build')
 import MatterSim
 
 from r2r.data_utils import load_nav_graphs
@@ -34,7 +33,7 @@ class EnvBatch(object):
         self.image_w = 640
         self.image_h = 480
         self.vfov = 60
-        
+
         self.sims = []
         for i in range(batch_size):
             sim = MatterSim.Simulator()
@@ -95,7 +94,7 @@ class R2RBatch(object):
         # in validation, we would split the data
         if sel_data_idxs is not None:
             t_split, n_splits = sel_data_idxs
-            ndata_per_split = len(self.data) // n_splits 
+            ndata_per_split = len(self.data) // n_splits
             start_idx = ndata_per_split * t_split
             if t_split == n_splits - 1:
                 end_idx = None
@@ -117,7 +116,7 @@ class R2RBatch(object):
 
         self.sim = new_simulator(self.connectivity_dir)
         self.angle_feature = get_all_point_angle_feature(self.sim, self.angle_feat_size)
-        
+
         self.buffered_state_dict = {}
         print('%s loaded with %d instructions, using splits: %s' % (
             self.__class__.__name__, len(self.data), self.name))
@@ -154,7 +153,7 @@ class R2RBatch(object):
         """
         if batch_size is None:
             batch_size = self.batch_size
-        
+
         batch = self.data[self.ix: self.ix+batch_size]
         if len(batch) < batch_size:
             random.shuffle(self.data)
@@ -305,7 +304,7 @@ class R2RBatch(object):
     def reset(self, **kwargs):
         ''' Load a new minibatch / episodes. '''
         self._next_minibatch(**kwargs)
-        
+
         scanIds = [item['scan'] for item in self.batch]
         viewpointIds = [item['path'][0] for item in self.batch]
         headings = [item['heading'] for item in self.batch]
@@ -344,7 +343,7 @@ class R2RBatch(object):
         scores['trajectory_lengths'] = np.sum([shortest_distances[a][b] for a, b in zip(path[:-1], path[1:])])
 
         gt_lengths = np.sum([shortest_distances[a][b] for a, b in zip(gt_path[:-1], gt_path[1:])])
-        
+
         scores['success'] = float(scores['nav_error'] < ERROR_MARGIN)
         scores['spl'] = scores['success'] * gt_lengths / max(scores['trajectory_lengths'], gt_lengths, 0.01)
         scores['oracle_success'] = float(scores['oracle_error'] < ERROR_MARGIN)
@@ -357,7 +356,7 @@ class R2RBatch(object):
         return scores
 
     def eval_metrics(self, preds):
-        ''' Evaluate each agent trajectory based on how close it got to the goal location 
+        ''' Evaluate each agent trajectory based on how close it got to the goal location
         the path contains [view_id, angle, vofv]'''
         print('eval %d predictions' % (len(preds)))
 
@@ -370,7 +369,7 @@ class R2RBatch(object):
             for k, v in traj_scores.items():
                 metrics[k].append(v)
             metrics['instr_id'].append(instr_id)
-        
+
         avg_metrics = {
             'steps': np.mean(metrics['trajectory_steps']),
             'lengths': np.mean(metrics['trajectory_lengths']),
@@ -385,6 +384,23 @@ class R2RBatch(object):
         }
         return avg_metrics, metrics
 
+    def get_fail_cases(self, preds):
+        metrics = defaultdict(list)
+        logger = {}
+        for item in preds:
+            instr_id = item['instr_id']
+            traj = [x[0] for x in item['trajectory']]
+            scan, gt_traj = self.gt_trajs[instr_id]
+            traj_scores = self._eval_item(
+                scan, traj, gt_traj, item['midstop'], self.gt_midstops[instr_id]
+            )
+            for k, v in traj_scores.items():
+                metrics[k].append(v)
+            metrics['instr_id'].append(instr_id)
+            if not metrics['success']:
+                all_views = [x[0] for x in item['traj_views']]
+                logger['instr_id'] = (scan, traj, gt_traj, all_views)
+        return logger
 
 class R2RBackBatch(R2RBatch):
     def __init__(
@@ -495,3 +511,5 @@ class R2RBackBatch(R2RBatch):
         }
 
         return avg_metrics, metrics
+
+

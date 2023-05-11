@@ -99,6 +99,9 @@ def parse_args():
         type=str, help='batch or total'
     )
 
+    # clean history
+    parser.add_argument("--clean_hist", action='store_true', default=False)
+
     args, _ = parser.parse_known_args()
 
     args = postprocess_args(args)
@@ -114,6 +117,9 @@ def postprocess_args(args):
         'vitbase': 'pth_vit_base_patch16_224_imagenet.hdf5',
         'vitbase_r2rfte2e': 'pth_vit_base_patch16_224_imagenet_r2r.e2e.ft.22k.hdf5',
         'vitbase_clip': 'pth_vit_base_patch32_224_clip.hdf5',
+        'vcbase': 'pth_vc1_base.hdf5',
+        'vclarge': 'pth_vc1_large.hdf5',
+        'vit-16-ori': 'vit-16.hdf5'
     }
     args.img_ft_file = os.path.join(ROOTDIR, 'R2R', 'features', ft_file_map[args.features])
     

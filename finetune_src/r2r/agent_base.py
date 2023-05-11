@@ -1,3 +1,6 @@
+import pdb
+
+
 class BaseAgent(object):
     ''' Base class for an R2R agent to generate and save trajectories. '''
 
@@ -12,6 +15,12 @@ class BaseAgent(object):
             output.append({'instr_id': k, 'trajectory': v['path']})
             if detailed_output:
                 output[-1]['details'] = v['details']
+        return output
+
+    def get_results2(self):
+        output = []
+        for k, v in self.results.items():
+            output.append({'instr_id': k, 'trajectory': v['path'], "traj_views": v["path_all_cands"]})
         return output
 
     def rollout(self, **args):

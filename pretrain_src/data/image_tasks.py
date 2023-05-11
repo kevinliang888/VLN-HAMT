@@ -3,14 +3,14 @@ import numpy as np
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
-from .data import pad_tensors, gen_seq_masks
+from .common import pad_tensors, gen_seq_masks
 
-from .mlm import random_word, MlmDataset
-from .mrc import _get_img_mask, MrcDataset
-from .sap import SapDataset
-from .sar import SarDataset
-from .sprel import SprelDataset
-from .itm import ItmDataset
+from .r2r_tasks import random_word, MlmDataset
+from .r2r_tasks import _get_img_mask, MrcDataset
+from .r2r_tasks import SapDataset
+from .r2r_tasks import SarDataset
+from .r2r_tasks import SprelDataset
+from .r2r_tasks import ItmDataset
 
 
 class MlmImageDataset(MlmDataset):

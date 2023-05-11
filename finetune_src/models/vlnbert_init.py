@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 
 
@@ -29,7 +31,6 @@ def get_vlnbert_models(args, config=None):
                 if k.startswith('next_action'):
                     k = 'bert.' + k
                 new_ckpt_weights[k] = v
-    
     if args.dataset == 'rxr' or args.tokenizer == 'xlm':
         cfg_name = 'xlm-roberta-base'
     else:
@@ -59,8 +60,8 @@ def get_vlnbert_models(args, config=None):
 
     vis_config.no_lang_ca = args.no_lang_ca
     vis_config.act_pred_token = args.act_pred_token
-    vis_config.max_action_steps = 50 
-    vis_config.max_action_steps = 100
+    vis_config.max_action_steps = 50
+    # vis_config.max_action_steps = 100
     
     visual_model = model_class.from_pretrained(
         pretrained_model_name_or_path=None, 
